@@ -533,6 +533,15 @@ static const char* list_pad_formatter(char *buffer, size_t buffer_size,
     return buffer;
 }
 
+#ifdef AUDIOHW_HAVE_EQ
+static void music_eq_changed(bool on)
+{
+    global_settings.music_eq = on;
+    struct mp3entry *id3 = audio_current_track();
+    sound_apply_hw_eq(id3 ? id3->path : NULL);
+}
+#endif
+
 static int32_t list_pad_getlang(int value, int unit)
 {
     switch (value)
@@ -1118,6 +1127,8 @@ const struct settings_list settings[] = {
 /* Hardware EQ tone controls */
 #ifdef AUDIOHW_HAVE_EQ
 /* Band gain is generic */
+    OFFON_SETTING(F_SOUNDSETTING, music_eq, LANG_EQUALIZER, true, "music eq",
+                  music_eq_changed),
     SOUND_SETTING(F_NO_WRAP, hw_eq_bands[AUDIOHW_EQ_BAND1].gain,
                   LANG_HW_EQ_GAIN, "tone band1 gain", SOUND_EQ_BAND1_GAIN),
 #ifdef AUDIOHW_HAVE_EQ_BAND2

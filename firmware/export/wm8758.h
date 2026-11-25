@@ -21,15 +21,35 @@
 #ifndef _WM8758_H
 #define _WM8758_H
 
-#define AUDIOHW_CAPS (BASS_CAP | TREBLE_CAP | BASS_CUTOFF_CAP | \
-                      TREBLE_CUTOFF_CAP | LINEOUT_CAP | LIN_GAIN_CAP | \
+#define AUDIOHW_CAPS (EQ_CAP | PRESCALER_CAP | LINEOUT_CAP | LIN_GAIN_CAP | \
                       MIC_GAIN_CAP)
 
+/* Filter bitmask */
+#define AUDIOHW_EQ_BAND_CAPS      ((EQ_CAP << 0) | (EQ_CAP << 1) | \
+                                   (EQ_CAP << 2) | (EQ_CAP << 3) | \
+                                   (EQ_CAP << 4))
+/* Filters that can adjust cutoff and center frequency */
+#define AUDIOHW_EQ_FREQUENCY_CAPS ((EQ_CAP << 0) | (EQ_CAP << 1) | \
+                                   (EQ_CAP << 2) | (EQ_CAP << 3) | \
+                                   (EQ_CAP << 4))
+/* Filters that can adjust band width */
+#define AUDIOHW_EQ_WIDTH_CAPS     ((EQ_CAP << 1) | (EQ_CAP << 2) | \
+                                   (EQ_CAP << 3))
+
 AUDIOHW_SETTING(VOLUME,      "dB", 0,  1, -90,   6, -25)
-AUDIOHW_SETTING(BASS,        "dB", 0,  1, -12,  12,   0)
-AUDIOHW_SETTING(TREBLE,      "dB", 0,  1, -12,  12,   0)
-AUDIOHW_SETTING(BASS_CUTOFF,   "", 0,  1,   1,   4,   1)
-AUDIOHW_SETTING(TREBLE_CUTOFF, "", 0,  1,   1,   4,   1)
+AUDIOHW_SETTING(EQ_BAND1_GAIN,    "dB", 0,   1, -12,  12,   0)
+AUDIOHW_SETTING(EQ_BAND2_GAIN,    "dB", 0,   1, -12,  12,   0)
+AUDIOHW_SETTING(EQ_BAND3_GAIN,    "dB", 0,   1, -12,  12,   0)
+AUDIOHW_SETTING(EQ_BAND4_GAIN,    "dB", 0,   1, -12,  12,   0)
+AUDIOHW_SETTING(EQ_BAND5_GAIN,    "dB", 0,   1, -12,  12,   0)
+AUDIOHW_SETTING(EQ_BAND1_FREQUENCY, "", 0,   1,   0,   3,   0)
+AUDIOHW_SETTING(EQ_BAND2_FREQUENCY, "", 0,   1,   0,   3,   0)
+AUDIOHW_SETTING(EQ_BAND3_FREQUENCY, "", 0,   1,   0,   3,   0)
+AUDIOHW_SETTING(EQ_BAND4_FREQUENCY, "", 0,   1,   0,   3,   0)
+AUDIOHW_SETTING(EQ_BAND5_FREQUENCY, "", 0,   1,   0,   3,   0)
+AUDIOHW_SETTING(EQ_BAND2_WIDTH,     "", 0,   1,   0,   1,   0)
+AUDIOHW_SETTING(EQ_BAND3_WIDTH,     "", 0,   1,   0,   1,   0)
+AUDIOHW_SETTING(EQ_BAND4_WIDTH,     "", 0,   1,   0,   1,   0)
 #ifdef HAVE_RECORDING
 /* The input PGAs have a gain range from -12dB to +35.25dB in 0.75dB steps
  * Values: 0, 1, ..., 63
@@ -167,13 +187,12 @@ void audiohw_enable_lineout(bool enable);
 #define EQ3                     0x14 /* default 02c */
 #define EQ4                     0x15 /* default 02c */
 #define EQ5                     0x16 /* default 02c */
-/* note: WM8758 curruently runs on low power mode. 3 peaking filters
- * and 3D will work when M128ENB is enabled + proper code. */
 #define EQ1_EQ3DMODE            (1 << 8) /* default */
 #define EQ_GAIN_MASK            0x1f
 #define EQ_CUTOFF_MASK          (3 << 5)
 #define EQ_GAIN_VALUE(x)        (((-x) + 12) & 0x1f)
-#define EQ_CUTOFF_VALUE(x)      ((((x) - 1) & 0x03) << 5)
+#define EQ_CUTOFF_VALUE(x)      (((x) & 0x03) << 5)
+#define EQ_BW_WIDE              (1 << 8) /* bands 2-4 */
 
 #define DACLIMITER1             0x18 /* default 032 unused */
 #define DACLIMITER2             0x19 /* default 000 unused */

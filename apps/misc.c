@@ -2087,3 +2087,15 @@ void validate_start_directory_init(void) /* INIT_ATTR */
 }
 
 #endif /* ndef __PCTOOL__ */
+
+/* Podcasts, meditations and sleep audio: no music EQ, skip by time */
+bool is_spoken_path(const char *path)
+{
+    static const char * const dirs[] = { "/Podcasts/", "/Meditation/", "/Sleep/" };
+    for (size_t i = 0; path && i < ARRAYLEN(dirs); i++)
+    {
+        if (!strncasecmp(path, dirs[i], strlen(dirs[i])))
+            return true;
+    }
+    return false;
+}

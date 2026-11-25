@@ -383,7 +383,7 @@ static void init_tagcache(void)
             }
             clear = true;
         }
-        sleep(HZ/4);
+        sleep(ret > 0 ? HZ/4 : HZ/50); /* poll fast unless showing progress */
     }
     tagtree_init();
 

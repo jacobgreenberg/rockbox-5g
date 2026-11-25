@@ -500,56 +500,8 @@ MAKE_MENU(system_menu, ID2P(LANG_SYSTEM),
 /*    STARTUP/SHUTDOWN MENU      */
 
 
-char* sleeptimer_getname(int selected_item, void * data,
-                         char *buffer, size_t buffer_len)
-{
-    (void)selected_item;
-    (void)data;
-    return string_sleeptimer(buffer, buffer_len);
-}
-
-int sleeptimer_voice(int selected_item, void*data)
-{
-    (void)selected_item;
-    (void)data;
-    talk_sleeptimer(-1);
-    return 0;
-}
-
-/* Handle restarting a current sleep timer to the newly set default
-   duration */
-static int sleeptimer_duration_cb(int action,
-                                  const struct menu_item_ex *this_item,
-                                  struct gui_synclist *this_list)
-{
-    (void)this_item;
-    (void)this_list;
-    static int initial_duration;
-    switch (action)
-    {
-        case ACTION_ENTER_MENUITEM:
-            initial_duration = global_settings.sleeptimer_duration;
-            break;
-        case ACTION_EXIT_MENUITEM:
-            if (initial_duration != global_settings.sleeptimer_duration
-                    && get_sleep_timer())
-                set_sleeptimer_duration(global_settings.sleeptimer_duration);
-    }
-    return action;
-}
-
 MENUITEM_SETTING(start_screen, &global_settings.start_in_screen, NULL);
 MENUITEM_SETTING(poweroff, &global_settings.poweroff, NULL);
-MENUITEM_FUNCTION_DYNTEXT(sleeptimer_toggle, 0, toggle_sleeptimer,
-                          sleeptimer_getname, sleeptimer_voice, NULL,
-                          NULL, Icon_NOICON);
-MENUITEM_SETTING(sleeptimer_duration,
-                 &global_settings.sleeptimer_duration,
-                 sleeptimer_duration_cb);
-MENUITEM_SETTING(sleeptimer_on_startup,
-                 &global_settings.sleeptimer_on_startup, NULL);
-MENUITEM_SETTING(keypress_restarts_sleeptimer,
-                 &global_settings.keypress_restarts_sleeptimer, NULL);
 MENUITEM_SETTING(show_shutdown_message, &global_settings.show_shutdown_message, NULL);
 
 #if defined(BUTTON_REC) || \
@@ -566,10 +518,6 @@ MAKE_MENU(startup_shutdown_menu, ID2P(LANG_STARTUP_SHUTDOWN),
             &show_shutdown_message,
             &start_screen,
             &poweroff,
-            &sleeptimer_toggle,
-            &sleeptimer_duration,
-            &sleeptimer_on_startup,
-            &keypress_restarts_sleeptimer,
 #if defined(SETTINGS_CLEAR_ON_HOLD)
             &clear_settings_on_hold,
 #undef SETTINGS_CLEAR_ON_HOLD

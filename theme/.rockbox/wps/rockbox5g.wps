@@ -1,0 +1,30 @@
+%Fl(2,17-Inter-Regular.fnt)
+%Fl(3,22-Inter-SemiBold.fnt)
+%Fl(4,14-Inter-Regular.fnt)
+%Fl(5,16-Inter-SemiBold.fnt)
+%?C<%Vd(art)|%Vd(noart)>
+%V(0,0,320,22,5)%Vf(F1F2F4)%Vb(0F1013)
+%dr(0,0,-,-,0F1013)%alNow Playing
+%V(200,0,112,22,2)%Vf(A2A8B4)
+%ar%pp of %pe
+%V(0,21,320,1,2)%dr(0,0,-,-,26282E)
+%V(12,40,120,120,2)%Cl(0,0,120,120,c,c)
+%Cd
+%Vl(art,144,40,164,32,3)%Vf(F1F2F4)%Vb(0F1013)
+%s%it
+%Vl(art,144,76,164,24,2)%Vf(F1F2F4)%Vb(0F1013)
+%s%ia
+%Vl(art,144,104,164,20,4)%Vf(A2A8B4)%Vb(0F1013)
+%s%id%?iy< · %ss(0,4,%iy)>
+%Vl(noart,12,40,296,32,3)%Vf(F1F2F4)%Vb(0F1013)
+%s%it
+%Vl(noart,12,76,296,24,2)%Vf(F1F2F4)%Vb(0F1013)
+%s%ia
+%Vl(noart,12,104,296,20,4)%Vf(A2A8B4)%Vb(0F1013)
+%s%id%?iy< · %ss(0,4,%iy)>
+%V(12,196,296,6,2)%Vf(2563EB)%Vb(26282E)
+%pb(0,0,296,6)
+%V(12,204,296,16,4)%Vf(A2A8B4)%Vb(0F1013)
+%al%pc%ar%pr
+%V(12,222,296,16,4)%Vf(A2A8B4)%Vb(0F1013)
+%alNext: %It

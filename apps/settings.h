@@ -283,6 +283,9 @@ struct filename_setting;
 void reset_setting(const struct settings_list *setting, void *var);
 void settings_reset(void);
 void sound_settings_apply(void);
+#ifdef AUDIOHW_HAVE_EQ
+void sound_apply_hw_eq(const char *path);
+#endif
 
 /* call this after loading a .wps/.rwps or other skin files, so that the
  * skin buffer is reset properly
@@ -889,6 +892,7 @@ struct user_settings
         int width;
 #endif
     } hw_eq_bands[AUDIOHW_EQ_BAND_NUM];
+    bool music_eq; /* apply hw_eq_bands gains, to music only */
 #endif /* AUDIOHW_HAVE_EQ */
 
 #ifdef HAVE_HARDWARE_CLICK

@@ -51,6 +51,9 @@ enum {
     /* Next track medadata was just loaded
        data = &(struct track_event){} */
     PLAYBACK_EVENT_NEXTTRACKID3_AVAILABLE,
+    /* Playback was paused
+       data = &(struct track_event){} */
+    PLAYBACK_EVENT_TRACK_PAUSE,
 };
 
 /** VOICE events **/

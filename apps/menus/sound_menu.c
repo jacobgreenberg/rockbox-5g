@@ -229,6 +229,7 @@ static int timestretch_callback(int action,
 #endif
 
 #ifdef AUDIOHW_HAVE_EQ
+    MENUITEM_SETTING(music_eq_item, &global_settings.music_eq, NULL);
 #endif /* AUDIOHW_HAVE_EQ */
 
 MAKE_MENU(sound_settings, ID2P(LANG_SOUND_SETTINGS), NULL, Icon_Audio,
@@ -247,7 +248,7 @@ MAKE_MENU(sound_settings, ID2P(LANG_SOUND_SETTINGS), NULL, Icon_Audio,
           ,&treble_cutoff
 #endif
 #ifdef AUDIOHW_HAVE_EQ
-          ,&audiohw_eq_tone_controls
+          ,&music_eq_item
 #endif
           ,&balance,&channel_config,&stereo_width
 #ifdef AUDIOHW_HAVE_DEPTH_3D

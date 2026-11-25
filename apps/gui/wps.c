@@ -148,9 +148,7 @@ void wps_do_action(enum wps_do_action_type action, bool updatewps)
         if (action == WPS_PLAYPAUSE)
         {
             settings_save();
-    #if !defined(HAVE_SW_POWEROFF)
             call_storage_idle_notifys(true);   /* make sure resume info is saved */
-    #endif
         }
     }
 
@@ -451,7 +449,9 @@ static void play_hop(int direction)
 {
     struct wps_state *state = get_wps_state();
     struct cuesheet *cue = state->id3->cuesheet;
-    long step = global_settings.skip_length*1000;
+    /* Spoken word hops 30 s; music uses the skip length setting */
+    long step = is_spoken_path(state->id3->path) ? 30*1000
+                                                 : global_settings.skip_length*1000;
     long elapsed = state->id3->elapsed;
     long remaining = state->id3->length - elapsed;
 
@@ -746,9 +746,7 @@ long gui_wps_show(void)
                about to shut down. lets save the settings. */
             if (state->paused) {
                 settings_save();
-#if !defined(HAVE_SW_POWEROFF)
                 call_storage_idle_notifys(true);
-#endif
             }
         }
 

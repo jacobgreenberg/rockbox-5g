@@ -3420,11 +3420,17 @@ static bool commit(void)
         return false;
     }
 
-    if (tch.entry_count == 0)
-        logf("nothing to commit");
-
     /* Fully initialize existing headers (if any) before going further. */
     tc_stat.ready = check_all_headers();
+
+    if (tch.entry_count == 0 && tc_stat.ready)
+    {
+        /* Nothing new and the database is clean: don't rewrite it */
+        logf("nothing to commit");
+        close(tmpfd);
+        remove_db_file(TAGCACHE_FILE_TEMP);
+        return true;
+    }
 
 #ifdef HAVE_EEPROM_SETTINGS
     remove_db_file(TAGCACHE_STATEFILE);
@@ -3731,6 +3737,9 @@ static void queue_command(int cmd, long idx_id, int tag, long data)
             tc_stat.queue_length++;
 
             mutex_unlock(&command_queue_mutex);
+
+            /* Flush with the next storage idle or forced flush (e.g. pause) */
+            register_storage_idle_func(command_queue_sync_callback);
             break;
         }
 
@@ -4790,7 +4799,7 @@ static bool check_deleted_file_refs(bool auto_update)
         }
         else if (rc_cache == 0)     /* not in cache but okay */
         {;}
-        else if (auto_update && rc_cache == ENOENT)
+        else if (auto_update && rc_cache < 0 && errno == ENOENT)
 #else
         if (!file_exists(buf))
 #endif /* HAVE_DIRCACHE */
@@ -5312,19 +5321,10 @@ static void tagcache_thread(void)
      * the changes first in foreground. */
     if (db_file_exists(TAGCACHE_FILE_TEMP))
     {
-#if !(defined(__APPLE__) && (CONFIG_PLATFORM & PLATFORM_SDL))
-        static const char *lines[] = {ID2P(LANG_TAGCACHE_BUSY),
-                                      ID2P(LANG_TAGCACHE_UPDATE)};
-        static const struct text_message message = {lines, 2};
-
-        if (gui_syncyesno_run_w_tmo(HZ * 5, YESNO_YES, str(LANG_TAGCACHE),
-                                    &message, NULL, NULL) == YESNO_YES)
-#endif
-        {
-            allocate_tempbuf();
-            commit();
-            free_tempbuf();
-        }
+        /* Declining only re-asked at every boot, so always commit */
+        allocate_tempbuf();
+        commit();
+        free_tempbuf();
     }
 
 #ifdef HAVE_TC_RAMCACHE
@@ -5420,10 +5420,35 @@ static void tagcache_thread(void)
                 break ;
 
             case SYS_USB_CONNECTED:
+            {
                 logf("USB: TagCache");
+                /* land queued stat writes before the computer can rebuild
+                   the database and renumber its entries */
+                run_command_queue(true);
                 usb_acknowledge(SYS_USB_CONNECTED_ACK, ev.data);
                 usb_wait_for_disconnect(&tagcache_queue);
+
+                /* The computer may have rebuilt the database: re-read the
+                   headers and, if they changed, reload it as at boot */
+                struct master_header old_tcmh = current_tcmh;
+                tagcache_commit_finalize();
+#ifdef HAVE_TC_RAMCACHE
+                if (global_settings.tagcache_ram &&
+                    memcmp(&old_tcmh, &current_tcmh, sizeof old_tcmh) != 0)
+                {
+                    read_lock++;
+                    tc_stat.ramcache = false;
+                    if (tcramcache.handle > 0)
+                        core_free(tcramcache.handle);
+                    allocate_tagcache(); /* resized for the new database */
+                    read_lock--;
+                    check_done = false;  /* the next timeout loads it */
+                }
+#else
+                (void)old_tcmh;
+#endif
                 break ;
+            }
         }
     }
 }

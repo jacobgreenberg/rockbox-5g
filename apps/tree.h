@@ -42,6 +42,7 @@ struct entry {
 #define BROWSE_NO_CONTEXT_MENU  0x0002  /* disable context menu */
 #define BROWSE_RUNFILE          0x0004  /* do ft_open() on the file instead of browsing */
 #define BROWSE_DIRFILTER        0x0080  /* override global_settings.dirfilter with browse_context.dirfilter */
+#define BROWSE_ROOTED           0x0200  /* never browse above browse_context.root */
 #define BROWSE_SELECTED         0x0100  /* this bit is set if user selected item */
 
 

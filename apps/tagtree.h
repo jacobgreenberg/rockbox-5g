@@ -33,6 +33,7 @@
 int tagtree_export(void);
 int tagtree_import(void);
 void tagtree_init(void) INIT_ATTR;
+void tagtree_set_root_menu(const char *id);
 bool tagtree_ready(void);
 void tagtree_request_reload(void);
 bool tagtree_reload_if_pending(struct tree_context *c);

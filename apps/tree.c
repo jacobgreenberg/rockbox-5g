@@ -714,6 +714,16 @@ void set_current_file(const char *path)
 }
 
 
+/* dir is the browse root, ignoring trailing slashes on either */
+static bool is_browse_root(const char *dir)
+{
+    const char *root = tc.browse->root;
+    size_t n = strlen(root);
+    while (n > 1 && root[n - 1] == '/')
+        n--;
+    return !strncmp(dir, root, n) && (dir[n] == '\0' || !strcmp(dir + n, "/"));
+}
+
 static int exit_to_new_screen(int screen)
 {
     gui_synclist_scroll_stop(&tree_lists);
@@ -827,7 +837,9 @@ static int dirbrowse(void)
 
             case ACTION_STD_CANCEL:
                 exit_to_new_screen(0);
-                if (*tc.dirfilter > NUM_FILTER_MODES && tc.dirlevel < 1) {
+                if ((*tc.dirfilter > NUM_FILTER_MODES && tc.dirlevel < 1) ||
+                    (tc.browse && (tc.browse->flags & BROWSE_ROOTED) &&
+                     is_browse_root(currdir))) {
                     exit_func = true;
                     break;
                 }

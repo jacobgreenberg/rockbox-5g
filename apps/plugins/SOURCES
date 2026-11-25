@@ -98,6 +98,10 @@ duke3d.c
 quake.c
 wolf3d.c
 #endif
+
+#ifdef HAVE_LCD_COLOR
+albumgrid.c
+#endif
 #endif
 
 #if PLUGIN_BUFFER_SIZE <= 0x20000

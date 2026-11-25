@@ -1771,8 +1771,9 @@ static bool audio_start_codec(bool auto_skip)
 
     if (autoresume_enable && !(cur_id3->elapsed || cur_id3->offset))
     {
-        /* Resume all manually selected tracks */
-        bool resume = !auto_skip;
+        /* Resume manually selected tracks only inside the autoresume
+           paths, so a song skipped halfway doesn't restart mid-song */
+        bool resume = !auto_skip && autoresumable(cur_id3);
 
         /* Send the "buffer" event to obtain the resume position for the codec */
         send_track_event(PLAYBACK_EVENT_TRACK_BUFFER, 0, cur_id3);
@@ -3207,6 +3208,17 @@ static void audio_on_pause(bool pause)
 
     play_status = pause ? PLAY_PAUSED : PLAY_PLAYING;
     iap_on_play_status(play_status);
+
+    if (pause)
+    {
+        /* Save the spot now so a crash or reset while paused doesn't lose it */
+        struct mp3entry *id3 = valid_mp3entry(id3_get(PLAYING_ID3));
+        if (id3)
+        {
+            playlist_update_resume_info(id3);
+            send_track_event(PLAYBACK_EVENT_TRACK_PAUSE, TEF_NONE, id3);
+        }
+    }
 
     if (!pause && codec_skip_pending)
     {

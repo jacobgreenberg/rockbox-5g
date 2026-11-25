@@ -11097,15 +11097,15 @@
   user: core
   <source>
     *: none
-    gigabeats,samsungypr1: "Tone Controls"
+    gigabeats,samsungypr1,ipodvideo: "Tone Controls"
   </source>
   <dest>
     *: none
-    gigabeats,samsungypr1: "Tone Controls"
+    gigabeats,samsungypr1,ipodvideo: "Tone Controls"
   </dest>
   <voice>
     *: none
-    gigabeats,samsungypr1: "Tone Controls"
+    gigabeats,samsungypr1,ipodvideo: "Tone Controls"
   </voice>
 </phrase>
 <phrase>
@@ -11114,15 +11114,15 @@
   user: core
   <source>
     *: none
-    gigabeats,samsungypr1: "Advanced Tone Control Settings"
+    gigabeats,samsungypr1,ipodvideo: "Advanced Tone Control Settings"
   </source>
   <dest>
     *: none
-    gigabeats,samsungypr1: "Advanced Tone Control Settings"
+    gigabeats,samsungypr1,ipodvideo: "Advanced Tone Control Settings"
   </dest>
   <voice>
     *: none
-    gigabeats,samsungypr1: "Advanced Tone Control Settings"
+    gigabeats,samsungypr1,ipodvideo: "Advanced Tone Control Settings"
   </voice>
 </phrase>
 <phrase>
@@ -11131,15 +11131,15 @@
   user: core
   <source>
     *: none
-    gigabeats,samsungypr1: "Band %d Gain"
+    gigabeats,samsungypr1,ipodvideo: "Band %d Gain"
   </source>
   <dest>
     *: none
-    gigabeats,samsungypr1: "Band %d Gain"
+    gigabeats,samsungypr1,ipodvideo: "Band %d Gain"
   </dest>
   <voice>
     *: none
-    gigabeats,samsungypr1: "Band Gain"
+    gigabeats,samsungypr1,ipodvideo: "Band Gain"
   </voice>
 </phrase>
 <phrase>
@@ -11148,15 +11148,15 @@
   user: core
   <source>
     *: none
-    gigabeats,samsungypr1: "Band %d Frequency"
+    gigabeats,samsungypr1,ipodvideo: "Band %d Frequency"
   </source>
   <dest>
     *: none
-    gigabeats,samsungypr1: "Band %d Frequency"
+    gigabeats,samsungypr1,ipodvideo: "Band %d Frequency"
   </dest>
   <voice>
     *: none
-    gigabeats,samsungypr1: "Band Frequency"
+    gigabeats,samsungypr1,ipodvideo: "Band Frequency"
   </voice>
 </phrase>
 <phrase>
@@ -11165,15 +11165,15 @@
   user: core
   <source>
     *: none
-    gigabeats,samsungypr1: "Band %d Width"
+    gigabeats,samsungypr1,ipodvideo: "Band %d Width"
   </source>
   <dest>
     *: none
-    gigabeats,samsungypr1: "Band %d Width"
+    gigabeats,samsungypr1,ipodvideo: "Band %d Width"
   </dest>
   <voice>
     *: none
-    gigabeats,samsungypr1: "Band Width"
+    gigabeats,samsungypr1,ipodvideo: "Band Width"
   </voice>
 </phrase>
 <phrase>
@@ -11182,15 +11182,15 @@
   user: core
   <source>
     *: none
-    gigabeats,samsungypr1: "Narrow"
+    gigabeats,samsungypr1,ipodvideo: "Narrow"
   </source>
   <dest>
     *: none
-    gigabeats,samsungypr1: "Narrow"
+    gigabeats,samsungypr1,ipodvideo: "Narrow"
   </dest>
   <voice>
     *: none
-    gigabeats,samsungypr1: "Narrow"
+    gigabeats,samsungypr1,ipodvideo: "Narrow"
   </voice>
 </phrase>
 <phrase>
@@ -11199,15 +11199,15 @@
   user: core
   <source>
     *: none
-    gigabeats,samsungypr1: "Wide"
+    gigabeats,samsungypr1,ipodvideo: "Wide"
   </source>
   <dest>
     *: none
-    gigabeats,samsungypr1: "Wide"
+    gigabeats,samsungypr1,ipodvideo: "Wide"
   </dest>
   <voice>
     *: none
-    gigabeats,samsungypr1: "Wide"
+    gigabeats,samsungypr1,ipodvideo: "Wide"
   </voice>
 </phrase>
 <phrase>

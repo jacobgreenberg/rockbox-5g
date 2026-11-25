@@ -63,7 +63,11 @@ enum {
     GO_TO_PLAYLISTS_SCREEN,
     GO_TO_PLAYLIST_VIEWER,
     GO_TO_SYSTEM_SCREEN,
-    GO_TO_SHORTCUTMENU
+    GO_TO_SHORTCUTMENU,
+    GO_TO_DB_PODCASTS,
+    GO_TO_DB_MEDITATION,
+    GO_TO_ALBUMGRID,
+    GO_TO_RECENT_ALBUMS
 };
 #ifndef PLUGIN
 extern struct menu_item_ex root_menu_;

@@ -124,6 +124,7 @@ static int browser(void* param)
     /* and stuff for the database browser */
 #ifdef HAVE_TAGCACHE
     static int last_db_dirlevel = 0, last_db_selection = 0, last_ft_dirlevel = 0;
+    static intptr_t last_db_view = GO_TO_DBBROWSER;
 #endif
 
     switch ((intptr_t)param)
@@ -174,6 +175,8 @@ static int browser(void* param)
         break;
 #ifdef HAVE_TAGCACHE
         case GO_TO_DBBROWSER:
+        case GO_TO_DB_PODCASTS:
+        case GO_TO_DB_MEDITATION:
             if (!tagcache_is_usable())
             {
                 bool reinit_attempted = false;
@@ -281,6 +284,17 @@ static int browser(void* param)
                         ROCKBOX_DIR "/tagnavi.config");
                 return GO_TO_PREVIOUS;
             }
+            /* Each home entry opens its own view; a remembered position
+               only applies to the view it was saved in */
+            if ((intptr_t)param != last_db_view)
+            {
+                last_db_dirlevel = 0;
+                last_db_selection = 0;
+                last_db_view = (intptr_t)param;
+            }
+            tagtree_set_root_menu((intptr_t)param == GO_TO_DB_PODCASTS ? "podcasts" :
+                                  (intptr_t)param == GO_TO_DB_MEDITATION ? "meditation" :
+                                  "music");
             filter = SHOW_ID3DB;
             last_ft_dirlevel = tc->dirlevel;
             tc->dirlevel = last_db_dirlevel;
@@ -318,6 +332,8 @@ static int browser(void* param)
         break;
 #ifdef HAVE_TAGCACHE
         case GO_TO_DBBROWSER:
+        case GO_TO_DB_PODCASTS:
+        case GO_TO_DB_MEDITATION:
             last_db_dirlevel = tc->dirlevel;
             last_db_selection = tc->selected_item;
             tc->dirlevel = last_ft_dirlevel;
@@ -476,6 +492,19 @@ extern struct menu_item_ex
         playlist_options,
         info_menu,
         system_menu;
+static int albumgrid(void* param)
+{
+    (void)param;
+    open_plugin_add_path(ID2P(LANG_OPEN_PLUGIN), PLUGIN_APPS_DIR "/albumgrid.rock", NULL);
+    return GO_TO_PLUGIN;
+}
+static int recent_albums(void* param)
+{
+    (void)param;
+    open_plugin_add_path(ID2P(LANG_OPEN_PLUGIN), PLUGIN_APPS_DIR "/albumgrid.rock", "recent");
+    return GO_TO_PLUGIN;
+}
+
 static const struct root_items items[] = {
     [GO_TO_FILEBROWSER] =   { browser, (void*)GO_TO_FILEBROWSER, &file_menu},
 #ifdef HAVE_TAGCACHE
@@ -500,6 +529,12 @@ static const struct root_items items[] = {
     [GO_TO_PLAYLIST_VIEWER] = { playlist_view, NULL, &playlist_options },
     [GO_TO_SYSTEM_SCREEN] = { miscscrn, &info_menu, &system_menu },
     [GO_TO_SHORTCUTMENU] = { do_shortcut_menu, NULL, NULL },
+#ifdef HAVE_TAGCACHE
+    [GO_TO_DB_PODCASTS] = { browser, (void*)GO_TO_DB_PODCASTS, &tagcache_menu },
+    [GO_TO_DB_MEDITATION] = { browser, (void*)GO_TO_DB_MEDITATION, &tagcache_menu },
+#endif
+    [GO_TO_ALBUMGRID] = { albumgrid, NULL, NULL },
+    [GO_TO_RECENT_ALBUMS] = { recent_albums, NULL, NULL },
 
 };
 #define NUM_ITEMS (int)(sizeof(items)/sizeof(*items))
@@ -514,11 +549,19 @@ MENUITEM_RETURNVALUE(shortcut_menu, ID2P(LANG_SHORTCUTS), GO_TO_SHORTCUTMENU,
 MENUITEM_RETURNVALUE(file_browser, ID2P(LANG_DIR_BROWSER), GO_TO_FILEBROWSER,
                         NULL, Icon_file_view_menu);
 #ifdef HAVE_TAGCACHE
-MENUITEM_RETURNVALUE(db_browser, ID2P(LANG_TAGCACHE), GO_TO_DBBROWSER,
+MENUITEM_RETURNVALUE(db_browser, "Music", GO_TO_DBBROWSER,
+                        NULL, Icon_Audio);
+MENUITEM_RETURNVALUE(db_podcasts, "Podcasts", GO_TO_DB_PODCASTS,
+                        NULL, Icon_Audio);
+MENUITEM_RETURNVALUE(db_meditation, "Meditation & Sleep", GO_TO_DB_MEDITATION,
                         NULL, Icon_Audio);
 #endif
 MENUITEM_RETURNVALUE(rocks_browser, ID2P(LANG_PLUGINS), GO_TO_BROWSEPLUGINS,
                         NULL, Icon_Plugin);
+MENUITEM_RETURNVALUE(album_grid, "Albums", GO_TO_ALBUMGRID,
+                        NULL, Icon_Audio);
+MENUITEM_RETURNVALUE(recent_grid, "Recently Played", GO_TO_RECENT_ALBUMS,
+                        NULL, Icon_Audio);
 
 static char *get_wps_item_name(int selected_item, void * data,
                                char *buffer, size_t buffer_len)
@@ -558,7 +601,11 @@ static struct menu_table menu_table[] = {
     { "files", &file_browser },
 #ifdef HAVE_TAGCACHE
     { "database", &db_browser },
+    { "podcasts", &db_podcasts },
+    { "meditation", &db_meditation },
 #endif
+    { "albums", &album_grid },
+    { "recent", &recent_grid },
     { "wps", &wps_item },
     { "settings", &menu_ },
 #ifdef HAVE_RECORDING
@@ -976,6 +1023,8 @@ void root_menu(void)
                 break;
 #ifdef HAVE_TAGCACHE
             case GO_TO_DBBROWSER:
+            case GO_TO_DB_PODCASTS:
+            case GO_TO_DB_MEDITATION:
 #endif
             case GO_TO_FILEBROWSER:
             case GO_TO_PLAYLISTS_SCREEN:

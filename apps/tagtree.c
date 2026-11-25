@@ -92,6 +92,7 @@ enum table {
     TABLE_ALLSUBENTRIES,
     TABLE_ALLSUBENTRIES_SORTED_BY_ALBUMS,
     TABLE_PLAYTRACK,
+    TABLE_FOLDER,
 };
 
 static const struct id3_to_search_mapping {
@@ -122,6 +123,7 @@ enum variables {
     menu_reload,
     menu_edit,
     menu_shuffle_songs,
+    menu_folder,
 };
 
 /* Capacity 10 000 entries (for example 10k different artists) */
@@ -216,6 +218,7 @@ static struct search_instruction *csi;
 static const char *strp;
 static int menu_count;
 static int rootmenu;
+static int rootmenu_default;
 
 static int current_offset;
 static int current_entry_count;
@@ -374,6 +377,7 @@ static int get_tag(int *tag)
         TAG_MATCH("->", menu_next) \
         TAG_MATCH("~>", menu_shuffle_songs) \
         TAG_MATCH("==>", menu_load) \
+        TAG_MATCH("@>", menu_folder) \
         TAG_MATCH("year", tag_year) \
         TAG_MATCH("album", tag_album) \
         TAG_MATCH("genre", tag_genre) \
@@ -891,6 +895,16 @@ static bool parse_search(struct menu_entry *entry, const char *str)
         return true;
     }
 
+    if (entry->type == menu_folder) /* e.g. "Shows" @> "/Podcasts" */
+    {
+        if (get_token_str(inst->name, sizeof inst->name - 1) < 0)
+            return false;
+        /* the file browser opens a path ending in '/' as that folder */
+        if (inst->name[strlen(inst->name) - 1] != '/')
+            strcat(inst->name, "/");
+        return true;
+    }
+
     if (entry->type != menu_next && entry->type != menu_shuffle_songs)
         return false;
 
@@ -1093,6 +1107,20 @@ static void tagtree_track_finish_event(unsigned short id, void *ev_data)
         logf("tagtree_track_finish_event: Save resume for %s: %lX %lX",
              str_or_empty(id3->title), elapsed, offset);
     }
+}
+
+static void tagtree_track_pause_event(unsigned short id, void *ev_data)
+{
+    (void)id;
+    struct mp3entry *id3 = ((struct track_event *)ev_data)->id3;
+
+    /* Only the resume point: a pause is not a play, so no runtimedb stats */
+    if (!global_settings.autoresume_enable || !id3->tagcache_idx
+        || id3->elapsed == 0)
+        return;
+
+    tagcache_update_numeric(id3->tagcache_idx - 1, tag_lastelapsed, id3->elapsed);
+    tagcache_update_numeric(id3->tagcache_idx - 1, tag_lastoffset, id3->offset);
 }
 
 int tagtree_export(void)
@@ -1403,6 +1431,7 @@ static void tagtree_unload(struct tree_context *c)
 
     remove_event(PLAYBACK_EVENT_TRACK_BUFFER, tagtree_buffer_event);
     remove_event(PLAYBACK_EVENT_TRACK_FINISH, tagtree_track_finish_event);
+    remove_event(PLAYBACK_EVENT_TRACK_PAUSE, tagtree_track_pause_event);
 
     if (c)
     {
@@ -1475,9 +1504,11 @@ static bool initialize_tagtree(void) /* also used when user selects 'Reload' in 
      * we have. That shouldn't normally happen. */
     if (rootmenu < 0)
         rootmenu = 0;
+    rootmenu_default = rootmenu;
 
     add_event(PLAYBACK_EVENT_TRACK_BUFFER, tagtree_buffer_event);
     add_event(PLAYBACK_EVENT_TRACK_FINISH, tagtree_track_finish_event);
+    add_event(PLAYBACK_EVENT_TRACK_PAUSE, tagtree_track_pause_event);
 
     core_shrink(tagtree_handle, NULL, tagtree_buf_used);
     return true;
@@ -1488,6 +1519,17 @@ static bool tagnavi_loaded;
 void tagtree_init(void)
 {
     tagnavi_loaded = initialize_tagtree();
+}
+
+/* Make the database root show menu 'id' (NULL or unknown: the configured root) */
+void tagtree_set_root_menu(const char *id)
+{
+    rootmenu = rootmenu_default;
+    for (int i = 0; id && i < menu_count; i++)
+    {
+        if (!strcasecmp(menus[i]->id, id))
+            rootmenu = i;
+    }
 }
 
 bool tagtree_ready(void)
@@ -2074,6 +2116,12 @@ static int load_root(struct tree_context *c)
                 dptr->customaction = ONPLAY_CUSTOMACTION_SHUFFLE_SONGS;
                 break;
 
+            case menu_folder:
+                dptr->newtable = TABLE_FOLDER;
+                dptr->extraseek = i;
+                dptr->customaction = ONPLAY_NO_CUSTOMACTION;
+                break;
+
             case menu_byfirstletter:
                 dptr->newtable = TABLE_NAVIBROWSE;
                 dptr->extraseek = i;
@@ -2214,6 +2262,17 @@ int tagtree_enter(struct tree_context* c, bool is_visible)
         seek = dptr->extraseek;
     }
     newextra = dptr->newtable;
+
+    if (newextra == TABLE_FOLDER)
+    {   /* a folder item opens the file browser, kept inside that folder */
+        struct browse_context browse = {
+            .dirfilter = SHOW_MUSIC,
+            .flags = BROWSE_DIRFILTER | BROWSE_ROOTED,
+            .icon = Icon_NOICON,
+            .root = menu->items[seek]->si.name,
+        };
+        return rockbox_browse(&browse);
+    }
 
     if (c->dirlevel >= MAX_DIR_LEVELS)
         return 0;

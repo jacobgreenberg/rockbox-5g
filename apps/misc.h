@@ -295,4 +295,6 @@ long from_normalized_volume(long norm, long min_vol, long max_vol, long max_norm
  * will be written to the lcd */
 void clear_screen_buffer(bool update);
 
+bool is_spoken_path(const char *path);
+
 #endif /* MISC_H */

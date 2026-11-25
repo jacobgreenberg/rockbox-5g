@@ -54,6 +54,7 @@
 #include "system.h"
 #include "general.h"
 #include "misc.h"
+#include "appevents.h"
 #include "icons.h"
 #include "font.h"
 #include "peakmeter.h"
@@ -866,6 +867,23 @@ void settings_apply_pm_range(void)
     peak_meter_init_range(global_settings.peak_meter_dbfs, pm_min, pm_max);
 }
 
+#ifdef AUDIOHW_HAVE_EQ
+/* The EQ is for music: spoken-word tracks, or the EQ off, play flat */
+void sound_apply_hw_eq(const char *path)
+{
+    bool on = global_settings.music_eq && !is_spoken_path(path);
+    for (int b = 0; b < AUDIOHW_EQ_BAND_NUM; b++)
+        sound_set(sound_enum_hw_eq_band_setting(b, AUDIOHW_EQ_GAIN),
+                  on ? global_settings.hw_eq_bands[b].gain : 0);
+}
+
+static void hw_eq_track_change(unsigned short id, void *data)
+{
+    (void)id;
+    sound_apply_hw_eq(((struct track_event *)data)->id3->path);
+}
+#endif /* AUDIOHW_HAVE_EQ */
+
 void sound_settings_apply(void)
 {
 #ifdef AUDIOHW_HAVE_BASS
@@ -900,8 +918,7 @@ void sound_settings_apply(void)
 
     for (b = 0; b < AUDIOHW_EQ_BAND_NUM; b++)
     {
-        int setting = sound_enum_hw_eq_band_setting(b, AUDIOHW_EQ_GAIN);
-        sound_set(setting, global_settings.hw_eq_bands[b].gain);
+        int setting;
 
 #ifdef AUDIOHW_HAVE_EQ_FREQUENCY
         setting = sound_enum_hw_eq_band_setting(b, AUDIOHW_EQ_FREQUENCY);
@@ -914,6 +931,9 @@ void sound_settings_apply(void)
             sound_set(setting, global_settings.hw_eq_bands[b].width);
 #endif /* AUDIOHW_HAVE_EQ_WIDTH */
     }
+    struct mp3entry *id3 = audio_current_track();
+    sound_apply_hw_eq(id3 ? id3->path : NULL);
+    add_event(PLAYBACK_EVENT_TRACK_CHANGE, hw_eq_track_change);
 #endif
 }
 

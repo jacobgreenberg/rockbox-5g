@@ -35,8 +35,13 @@
 #include "sound.h"
 
 /* shadow registers */
-static unsigned short eq1_reg = EQ1_EQ3DMODE | EQ_GAIN_VALUE(0);
-static unsigned short eq5_reg = EQ_GAIN_VALUE(0);
+static unsigned short eq_regs[5] =
+{
+    EQ1_EQ3DMODE | EQ_GAIN_VALUE(0), EQ_GAIN_VALUE(0), EQ_GAIN_VALUE(0),
+    EQ_GAIN_VALUE(0), EQ_GAIN_VALUE(0)
+};
+/* DAC attenuation in 0.5 dB steps so positive EQ gain doesn't clip */
+static int prescaler;
 
 /* convert tenth of dB volume (-89..6) to master volume register value */
 static int vol_tenthdb2hw(int db)
@@ -145,6 +150,12 @@ void audiohw_set_volume(int vol_l, int vol_r)
     get_volume_params(vol_l, &dac_l, &amp_l);
     get_volume_params(vol_r, &dac_r, &amp_r);
 
+    /* sound.c raises the volume by the prescale; take it back off the DAC */
+    if (dac_l)
+        dac_l -= prescaler;
+    if (dac_r)
+        dac_r -= prescaler;
+
     /* set DAC
        Important: DAC is global and will also affect lineout */
     wmcodec_write(LDACVOL, dac_l);
@@ -183,28 +194,44 @@ void audiohw_enable_lineout(bool enable)
     wmcodec_write(PWRMGMT3, pwrmgmt3_data);
 }
 
-void audiohw_set_bass(int value)
+/* Equalizer - set the eq band level -12 to +12 dB. */
+void audiohw_set_eq_band_gain(unsigned int band, int val)
 {
-    eq1_reg = (eq1_reg & ~EQ_GAIN_MASK) | EQ_GAIN_VALUE(value);
-    wmcodec_write(EQ1, eq1_reg);
+    if (band > 4)
+        return;
+
+    eq_regs[band] = (eq_regs[band] & ~EQ_GAIN_MASK) | EQ_GAIN_VALUE(val);
+    wmcodec_write(EQ1 + band, eq_regs[band]);
 }
 
-void audiohw_set_bass_cutoff(int value)
+/* Equalizer - set the eq band frequency index. */
+void audiohw_set_eq_band_frequency(unsigned int band, int val)
 {
-    eq1_reg = (eq1_reg & ~EQ_CUTOFF_MASK) | EQ_CUTOFF_VALUE(value);
-    wmcodec_write(EQ1, eq1_reg);
+    if (band > 4)
+        return;
+
+    eq_regs[band] = (eq_regs[band] & ~EQ_CUTOFF_MASK) | EQ_CUTOFF_VALUE(val);
+    wmcodec_write(EQ1 + band, eq_regs[band]);
 }
 
-void audiohw_set_treble(int value)
+/* Equalizer - set bandwidth for peaking filters to wide (!= 0) or
+ * narrow (0); only valid for peaking filter bands 1-3. */
+void audiohw_set_eq_band_width(unsigned int band, int val)
 {
-    eq5_reg = (eq5_reg & ~EQ_GAIN_MASK) | EQ_GAIN_VALUE(value);
-    wmcodec_write(EQ5, eq5_reg);
+    if (band < 1 || band > 3)
+        return;
+
+    if (val)
+        eq_regs[band] |= EQ_BW_WIDE;
+    else
+        eq_regs[band] &= ~EQ_BW_WIDE;
+    wmcodec_write(EQ1 + band, eq_regs[band]);
 }
 
-void audiohw_set_treble_cutoff(int value)
+/* Set prescaler (centibels) to prevent clipping when EQ bands boost. */
+void audiohw_set_prescaler(int val)
 {
-    eq5_reg = (eq5_reg & ~EQ_CUTOFF_MASK) | EQ_CUTOFF_VALUE(value);
-    wmcodec_write(EQ5, eq5_reg);
+    prescaler = val / 5;
 }
 
 /* Nice shutdown of WM8758 codec */
@@ -272,8 +299,9 @@ void audiohw_set_frequency(int fsel)
 
     /* set ADC and DAC filter characteristics according to sample rate */
     wmcodec_write(ADDCTRL, (freq_setups[fsel] & ADDCTRL_SR_MASK)
-                         | ADDCTRL_SLOWCLKEN);
-    /* SLOWCLK enabled for zero cross timeout to work */
+                         | ADDCTRL_SLOWCLKEN | ADDCTRL_M128ENB);
+    /* SLOWCLK enabled for zero cross timeout to work; M128ENB leaves
+       low-power mode, which otherwise runs only the two shelf EQ bands */
 }
 
 void audiohw_enable_recording(bool source_mic)

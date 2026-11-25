@@ -16,9 +16,6 @@
 
 int main(int argc, char **argv)
 {
-    (void)argc;
-    (void)argv;
-
     fprintf(stderr, "Rockbox database tool for '%s'\n\n", TARGET_NAME);
 
     DIR* rbdir = opendir(ROCKBOX_DIR);
@@ -30,8 +27,10 @@ int main(int argc, char **argv)
     closedir(rbdir);
 
     /* / is actually ., will get translated in io.c
-     * (with the help of sim_root_dir below */
-    const char *paths[] = { "/", NULL };
+     * (with the help of sim_root_dir below). Optional args limit the scan,
+     * e.g. /Music /Podcasts */
+    const char *root[] = { "/", NULL };
+    const char **paths = argc > 1 ? (const char **)argv + 1 : root;
     tagcache_init();
 
     fprintf(stderr, "Scanning files (may take some time)...\n");

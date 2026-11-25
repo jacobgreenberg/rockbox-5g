@@ -34,6 +34,7 @@
 #include "string-extra.h"
 #include "debug.h"
 #include "mv.h"
+#include "rbunicode.h"
 
 #ifndef os_fstatat
 #define USE_OSDIRNAME /* we need to remember the open directory path */
@@ -701,6 +702,11 @@ struct sim_dirent * sim_readdir(DIR *dirp)
     if (strlcpy_from_os(entry->d_name, osdirent->d_name, size) >= size)
         FILE_ERROR_RETURN(ENAMETOOLONG, NULL);
 
+#if defined(__APPLE__) && defined(UTF8PROC_EXPORTS)
+    /* macOS returns decomposed (NFD) names; the target sees composed ones */
+    utf8_normalize(entry->d_name);
+#endif
+
     entry->info.osdirent = osdirent;
     return entry;
 }
@@ -809,11 +815,15 @@ struct dirinfo sim_dir_get_info(DIR *dirp, struct sim_dirent *entry)
 
     info.size = s.st_size;
 
+    /* Match the target, which reads FAT's local clock time as if it were
+       UTC. The host OS converted that clock using its current offset, so add
+       the same offset back (not a per-date one, or DST shifts it an hour). */
+    time_t now = time(NULL);
     struct tm tm;
-    if (localtime_r(&s.st_mtime, &tm) == NULL)
+    if (localtime_r(&now, &tm) == NULL)
         FILE_ERROR(ERRNO, RC);
 
-    info.mtime = mktime(&tm);
+    info.mtime = s.st_mtime + tm.tm_gmtoff;
 
     return info;
 

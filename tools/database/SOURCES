@@ -20,5 +20,6 @@ database.c
 ../../firmware/target/hosted/filesystem-app.c
 #else /* !APPLICATION */
 ../../uisimulator/common/filesystem-sim.c
+../../firmware/target/hosted/sdl/filesystem-sdl.c
 #endif /* APPLICATION */
 /* Caution. metadata files do not add!! */
